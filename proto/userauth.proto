@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package userauth;
+
+// Сообщения
+message User {
+    string id = 1;
+    string name = 2;
+    string email = 3;
+    string password = 4;
+}
+
+message UserResponse {
+    string id = 1;
+    string name = 2;
+    string email = 3;
+}
+
+message AuthRequest {
+    string email = 1;
+    string password = 2;
+}
+
+message AuthResponse {
+    string access_token = 1;
+    string refresh_token = 2;
+}
+
+message RefreshTokenRequest {
+    string refresh_token = 1;
+}
+
+message ChangePasswordRequest {
+    string id = 1;
+    string old_password = 2;
+    string new_password = 3;
+}
+
+message EditUserRequest {
+    string id = 1;
+    string name = 2;
+    string email = 3;
+}
+
+message DeleteUserRequest {
+    string id = 1;
+}
+
+
+message Empty {
+}
+
+// Сервисы
+service UserService {
+    rpc CreateUser (User) returns (UserResponse);
+    rpc GetUser (User) returns (UserResponse);
+    rpc UpdateUser (EditUserRequest) returns (UserResponse);
+    rpc ChangePassword (ChangePasswordRequest) returns (Empty);
+    rpc DeleteUser (DeleteUserRequest) returns (Empty);
+    }
+
+
+service AuthService {
+    rpc Login (AuthRequest) returns (AuthResponse);
+    rpc ValidateToken (AuthResponse) returns (Empty);
+    rpc RefreshToken (RefreshTokenRequest) returns (AuthResponse);
+}
