@@ -2,7 +2,7 @@ import grpc
 
 from models.users import User as UserModel
 from sqlalchemy import or_
-from grpc import ServicerContext as context
+from sqlalchemy.orm.exc import NoResultFound
 from config.database import get_db
 from utils.password import get_password_hash, pwd_context
 
@@ -13,17 +13,18 @@ class UserController(object):
     def get_user_by_email(self, email: str) -> UserModel:
         if db_user := self.db.query(UserModel).filter(UserModel.email == email).first():
             return db_user
+        raise NoResultFound()
 
     def get_user_by_id(self, id: str) -> UserModel:
         if db_user := self.db.query(UserModel).filter(UserModel.id == int(id)).first():
             return db_user
-        context.abort(grpc.StatusCode.NOT_FOUND, "User not found")
+        raise NoResultFound()
 
     def get_user(self, email: str, id: str) -> UserModel:
         if db_user := self.db.query(UserModel).filter(
                 or_(UserModel.id == int(id), UserModel.email == email)).first():
             return db_user
-        context.abort(grpc.StatusCode.NOT_FOUND, "User not found")
+        raise NoResultFound()
 
     def create_user(self, name: str, email: str, password: str) -> UserModel:
         hashed_password = get_password_hash(password)
@@ -44,9 +45,6 @@ class UserController(object):
 
     def change_password(self, id: str, new_password: str, old_password: str) -> None:
         db_user = self.get_user_by_id(id)
-        if not pwd_context.verify(old_password, db_user.password):
-            context.abort(grpc.StatusCode.UNAUTHENTICATED, "Old password is incorrect")
-
         db_user.password = get_password_hash(new_password)
         self.db.commit()
 

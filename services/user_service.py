@@ -4,6 +4,7 @@ import generated.userauth_pb2 as userauth_pb2
 import generated.userauth_pb2_grpc as userauth_pb2_grpc
 from pydantic import ValidationError
 from schemas.user import UserCreate, UserUpdate, ChangePassword, UserDelete, UserGet
+from sqlalchemy.orm.exc import NoResultFound
 
 
 class UserService(userauth_pb2_grpc.UserServiceServicer, UserController):
@@ -27,9 +28,12 @@ class UserService(userauth_pb2_grpc.UserServiceServicer, UserController):
     def GetUser(self, request: userauth_pb2.User, context: grpc.ServicerContext) -> userauth_pb2.UserResponse:
         try:
             user_data = UserGet(id=request.id)
+            db_user = self.get_user(request.email, request.id)
         except ValidationError as e:
             context.abort(grpc.StatusCode.INVALID_ARGUMENT, str(e))
-        db_user = self.get_user(request.email, request.id)
+        except NoResultFound:
+            context.abort(grpc.StatusCode.NOT_FOUND)
+
         return userauth_pb2.UserResponse(
             id=str(db_user.id),
             name=db_user.name,

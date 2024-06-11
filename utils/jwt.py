@@ -1,13 +1,14 @@
 import jwt
 import datetime
-
-SECRET_KEY = "your_secret_key"
+from config import settings
+from config.settings import SECRET_KEY
 
 
 def generate_access_token(user_id: int) -> str:
     payload = {
         "user_id": user_id,
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=15)  # Время жизни access токена 15 минут
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=settings.ACCESS_TOKEN_LIFETIME)
+        # Время жизни access токена 15 минут
     }
     return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
@@ -15,7 +16,8 @@ def generate_access_token(user_id: int) -> str:
 def generate_refresh_token(user_id: int) -> str:
     payload = {
         "user_id": user_id,
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(days=7)  # Время жизни refresh токена 7 дней
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(days=settings.REFRESH_TOKEN_LIFETIME)
+        # Время жизни refresh токена 7 дней
     }
     return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
